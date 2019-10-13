@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <conio.h>
+#include <functional>
 #include <stdio.h>
 #include <string.h>
 
@@ -8,6 +9,73 @@
 
 #define SIZE 256
 #define MAX_LINES 65536
+
+// Internal type defining how we store the buffer's text data.
+struct Storage {
+  char* data;
+};
+
+// Internal type defining a mark's position in a buffer.
+struct Location {
+  int line;
+  int column;
+};
+
+// A mark is like a cursor in the file.
+struct Mark {
+  // TODO: Maybe move this linked list stuff into a MarkNode struct instead.
+  Mark* next_mark;
+ 
+  int id;
+  Location position;
+  bool fixed;
+};
+
+struct Mode {
+  // TODO: Maybe move this linked list stuff into a ModeNode struct instead.
+  Mode* next_mode;
+
+  // Unique identifier for this mode.
+  char* mode_name;
+
+  // A function to execute whenever the command set for a buffer needs to be
+  // created (or recreated).
+  std::function<bool()> on_add;
+};
+
+// A buffer contains text, marks to edit that text, and info about the file
+// that text was loaded from / should be saved to.
+struct Buffer {
+  // The next buffer in the world.
+  // TODO: Maybe move this linked list stuff into a BufferNode struct instead.
+  Buffer* next_buffer;
+  std::string buffer_name;
+
+  // List of marks that are editing the buffer.
+  Mark* marks;
+
+  // Contents of the file.
+  Storage* contents;
+
+  // File metadata.
+  std::string file_name;
+  long file_time;
+  bool modified;
+
+  // Editing modes of the file.
+  Mode* modes;
+
+  // TODO: Maybe add these fields too if we need them.
+  // int current_line;
+  // int num_chars;
+  // int num_lines;
+};
+
+// The world is a linked list of all buffers.
+struct World {
+  Buffer* buffers;
+  Buffer* current_buffer;
+};
 
 bool IsPhraseBreak(char c) {
   return c == ' ' || c == ';' || c == '-' || c == '{' || c == '}';
