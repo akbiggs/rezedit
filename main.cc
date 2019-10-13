@@ -7,6 +7,7 @@
 #include "SDL_ttf.h" 
 
 #define SIZE 256
+#define MAX_LINES 65536
 
 bool IsPhraseBreak(char c) {
   return c == ' ' || c == ';' || c == '-' || c == '{' || c == '}';
@@ -53,6 +54,7 @@ int main(int argc, char* argv[]) {
   char* current = buffer;
   char* composition;
   size_t cursor = 0;
+  size_t line = 0;
   size_t selection_len = 0;
 
   buffer[0] = '\0';
@@ -102,7 +104,7 @@ int main(int argc, char* argv[]) {
               stop -= 1;
             }
           }
-          // Copy characters from where our cursor was back through the buffer.
+          // Copy characters from cursor up until end of buffer.
           int distance = strlen(buffer) - cursor;
 
           strncpy(&buffer[stop], &buffer[cursor], distance);
@@ -113,11 +115,14 @@ int main(int argc, char* argv[]) {
       // TextInput
       if (event.type == SDL_TEXTINPUT) {
         if (cursor >= strlen(buffer)) {
+          // Append
           strncat(buffer, event.text.text, SIZE - strlen(buffer) - 1);
           cursor = strlen(buffer);
         } else {
+          // Insert
           int temp_size = strlen(buffer) - cursor;
           char* temp = new char[temp_size + 1];
+
           strncpy(temp, &buffer[cursor], temp_size);
           temp[temp_size] = '\0';
 
@@ -147,8 +152,8 @@ int main(int argc, char* argv[]) {
 
     SDL_Rect debug_cursor = {200 + cursor * 13, 12, 1, 24};
     SDL_Rect debug_buffer_size = {200, 12, strlen(buffer) * 13, 24};
-    SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
-    SDL_RenderFillRect(renderer, &debug_buffer_size);
+    //SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
+    //SDL_RenderFillRect(renderer, &debug_buffer_size);
     SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
     SDL_RenderFillRect(renderer, &debug_cursor);
 
@@ -172,6 +177,7 @@ int main(int argc, char* argv[]) {
       SDL_Rect text_rect = {200, 12, text_surface->w, text_surface->h};
       SDL_RenderCopy(renderer, text_texture, NULL, &text_rect);
 
+      // TODO: why does this prevent the reticle from rendering?
       // SDL_DestroyTexture(text_texture);
       // SDL_FreeSurface(text_surface);
     }
